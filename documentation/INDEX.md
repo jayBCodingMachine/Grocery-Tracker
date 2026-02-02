@@ -1,12 +1,19 @@
 # Documentation Index
 
-This folder contains documentation for each feature implemented in the Grocery Tracker app.
+This folder contains documentation for the Grocery Tracker app.
 
-**[WORKFLOW.md](./WORKFLOW.md)** — Development process and conventions
+## Start Here (New Sessions)
+
+| Document | Purpose |
+|----------|---------|
+| **[ROADMAP.md](./ROADMAP.md)** | Project vision, phases, and what's next |
+| **[WORKFLOW.md](./WORKFLOW.md)** | Development process and conventions |
 
 ---
 
-## Naming Convention
+## Feature Documentation
+
+### Naming Convention
 
 ```
 XXX-feature-name/

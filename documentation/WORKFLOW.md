@@ -4,6 +4,73 @@ This document outlines the development workflow for the Grocery Tracker project.
 
 ---
 
+## For New AI Agents: Start Here
+
+If you're an AI agent starting a new session, read these documents in order:
+
+| Order | Document | Purpose |
+|-------|----------|---------|
+| 1 | **[ROADMAP.md](./ROADMAP.md)** | Project vision, current status, what's next |
+| 2 | **[INDEX.md](./INDEX.md)** | List of completed features with links |
+| 3 | **This file (WORKFLOW.md)** | How we work together |
+
+### Key Context About the Owner
+
+- **Experience:** 4 years software development, primarily Salesforce
+- **Learning goals:** AWS certification prep, understanding full-stack web dev outside managed platforms
+- **Communication style:** Wants to understand "why" before implementing, values documentation and learning over speed
+
+### What This Means for You
+
+1. **Explain your reasoning** — Don't just write code, explain why you're making each decision
+2. **Present options** — When there are multiple approaches, present them with tradeoffs
+3. **Document as you go** — Create/update documentation alongside code changes
+4. **Check the roadmap** — Before starting work, verify it aligns with project direction
+
+### Project State Quick Check
+
+```bash
+# See current feature status
+cat documentation/INDEX.md
+
+# See recent commits
+git log --oneline -10
+
+# Check for uncommitted work
+git status
+```
+
+### Key Files to Know
+
+| File | Purpose |
+|------|---------|
+| `lib/dynamodb.ts` | AWS DynamoDB client configuration |
+| `app/api/items/route.ts` | REST API endpoints (CRUD) |
+| `app/types.ts` | TypeScript interfaces |
+| `components/GroceryList.tsx` | Main UI component |
+| `.env.local` | AWS credentials (not in git) |
+
+### Current Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  React Frontend │ ──► │  Next.js API     │ ──► │  AWS DynamoDB   │
+│  (components/)  │     │  (app/api/)      │     │  (us-east-2)    │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+                                │
+                                ▼
+                        .env.local (credentials)
+```
+
+### Before Writing Any Code
+
+1. **Discuss the approach** — Don't jump into implementation
+2. **Check ROADMAP.md** — Is this feature planned? What's the priority?
+3. **Assign a feature number** — Check INDEX.md for the next available number
+4. **Create documentation first** — `documentation/XXX-feature-name/CHANGES.md`
+
+---
+
 ## Core Principles
 
 1. **Understand before implementing** — Always explain the "why" before writing code
