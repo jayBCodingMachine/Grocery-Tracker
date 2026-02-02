@@ -1,84 +1,126 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import {
+    QueryCommand,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand
+} from '@aws-sdk/lib-dynamodb';
+import { docClient, TABLE_NAME } from '@/lib/dynamodb';
 import { GroceryItemType } from '@/app/types';
 
-// Path to our JSON "database"
-const DB_PATH = path.join(process.cwd(), 'data', 'items.json');
+// Temporary: hardcoded user until we add authentication
+const DEFAULT_USER_ID = 'default_user';
 
-// Helper to read data
-async function readDb(): Promise<GroceryItemType[]> {
-    try {
-        const data = await fs.readFile(DB_PATH, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        // If file doesn't exist or is invalid, return empty array
-        return [];
-    }
-}
-
-// Helper to write data
-async function writeDb(items: GroceryItemType[]) {
-    await fs.writeFile(DB_PATH, JSON.stringify(items, null, 2));
-}
-
+// GET - Fetch all items for the current user
 export async function GET() {
-    const items = await readDb();
-    return NextResponse.json(items);
+    try {
+        const command = new QueryCommand({
+            TableName: TABLE_NAME,
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': DEFAULT_USER_ID,
+            },
+        });
+
+        const response = await docClient.send(command);
+        const items = response.Items as GroceryItemType[] || [];
+
+        return NextResponse.json(items);
+    } catch (error) {
+        console.error('DynamoDB GET error:', error);
+        return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 });
+    }
 }
 
+// POST - Add a new item
 export async function POST(request: Request) {
-    const body = await request.json();
-    const items = await readDb();
+    try {
+        const body = await request.json();
 
-    // Handle different actions based on body content? 
-    // For simplicity, let's assume body IS the new item to add, 
-    // OR we can make a more RESTful structure.
+        if (body.action === 'add') {
+            const newItem: GroceryItemType = {
+                userId: DEFAULT_USER_ID,
+                itemId: `item_${Date.now()}`,
+                name: body.name,
+                store: body.store,
+                completed: false,
+            };
 
-    // Let's go with: POST = Add Item
-    if (body.action === 'add') {
-        const newItem: GroceryItemType = {
-            id: Date.now().toString(),
-            name: body.name,
-            store: body.store,
-            completed: false
-        };
-        items.unshift(newItem);
-        await writeDb(items);
-        return NextResponse.json(newItem);
+            const command = new PutCommand({
+                TableName: TABLE_NAME,
+                Item: newItem,
+            });
+
+            await docClient.send(command);
+            return NextResponse.json(newItem);
+        }
+
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    } catch (error) {
+        console.error('DynamoDB POST error:', error);
+        return NextResponse.json({ error: 'Failed to add item' }, { status: 500 });
     }
-
-    // DELETE = Remove Item (usually implies DELETE method, but we can do it here for quick speed if we want, 
-    // but let's stick to methods properly if we can, or just use POST for everything for dead simplicity if needed.
-    // Let's do proper methods.)
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
 
+// PUT - Update an item (e.g., toggle completed)
 export async function PUT(request: Request) {
-    const body = await request.json();
-    const items = await readDb();
+    try {
+        const body = await request.json();
+        const { itemId, updates } = body;
 
-    const index = items.findIndex(i => i.id === body.id);
-    if (index !== -1) {
-        // Toggle completed or update fields
-        items[index] = { ...items[index], ...body.updates };
-        await writeDb(items);
-        return NextResponse.json(items[index]);
+        // Build the update expression dynamically
+        const updateExpressions: string[] = [];
+        const expressionAttributeNames: Record<string, string> = {};
+        const expressionAttributeValues: Record<string, unknown> = {};
+
+        Object.entries(updates).forEach(([key, value]) => {
+            updateExpressions.push(`#${key} = :${key}`);
+            expressionAttributeNames[`#${key}`] = key;
+            expressionAttributeValues[`:${key}`] = value;
+        });
+
+        const command = new UpdateCommand({
+            TableName: TABLE_NAME,
+            Key: {
+                userId: DEFAULT_USER_ID,
+                itemId: itemId,
+            },
+            UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ReturnValues: 'ALL_NEW',
+        });
+
+        const response = await docClient.send(command);
+        return NextResponse.json(response.Attributes);
+    } catch (error) {
+        console.error('DynamoDB PUT error:', error);
+        return NextResponse.json({ error: 'Failed to update item' }, { status: 500 });
     }
-
-    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
 }
 
+// DELETE - Remove an item
 export async function DELETE(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    try {
+        const { searchParams } = new URL(request.url);
+        const itemId = searchParams.get('id');
 
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+        if (!itemId) {
+            return NextResponse.json({ error: 'ID required' }, { status: 400 });
+        }
 
-    const items = await readDb();
-    const newItems = items.filter(i => i.id !== id);
-    await writeDb(newItems);
+        const command = new DeleteCommand({
+            TableName: TABLE_NAME,
+            Key: {
+                userId: DEFAULT_USER_ID,
+                itemId: itemId,
+            },
+        });
 
-    return NextResponse.json({ success: true });
+        await docClient.send(command);
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('DynamoDB DELETE error:', error);
+        return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
+    }
 }

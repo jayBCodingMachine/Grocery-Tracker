@@ -63,20 +63,20 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         }
     };
 
-    const toggleItem = async (id: string) => {
-        const item = items.find(i => i.id === id);
+    const toggleItem = async (itemId: string) => {
+        const item = items.find(i => i.itemId === itemId);
         if (!item) return;
 
         // Optimistic update
         setItems(prev => prev.map(i =>
-            i.id === id ? { ...i, completed: !i.completed } : i
+            i.itemId === itemId ? { ...i, completed: !i.completed } : i
         ));
 
         try {
             await fetch('/api/items', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, updates: { completed: !item.completed } })
+                body: JSON.stringify({ itemId, updates: { completed: !item.completed } })
             });
         } catch (error) {
             // Revert on error
@@ -85,12 +85,12 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         }
     };
 
-    const deleteItem = async (id: string) => {
+    const deleteItem = async (itemId: string) => {
         // Optimistic update
-        setItems(prev => prev.filter(item => item.id !== id));
+        setItems(prev => prev.filter(item => item.itemId !== itemId));
 
         try {
-            await fetch(`/api/items?id=${id}`, {
+            await fetch(`/api/items?id=${itemId}`, {
                 method: 'DELETE'
             });
         } catch (error) {
@@ -141,7 +141,7 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
                 ) : (
                     filteredItems.map(item => (
                         <GroceryItem
-                            key={item.id}
+                            key={item.itemId}
                             item={item}
                             onToggle={toggleItem}
                             onDelete={deleteItem}

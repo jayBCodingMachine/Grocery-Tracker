@@ -29,7 +29,7 @@ export default function GroceryItem({ item, onToggle, onDelete }: GroceryItemPro
                     cursor: 'pointer',
                     gap: '12px'
                 }}
-                onClick={() => onToggle(item.id)}
+                onClick={() => onToggle(item.itemId)}
             >
                 <div
                     style={{
@@ -86,7 +86,7 @@ export default function GroceryItem({ item, onToggle, onDelete }: GroceryItemPro
             <button
                 onClick={(e) => {
                     e.stopPropagation();
-                    onDelete(item.id);
+                    onDelete(item.itemId);
                 }}
                 style={{
                     background: 'none',
