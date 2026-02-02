@@ -2,6 +2,10 @@
 
 This folder contains documentation for each feature implemented in the Grocery Tracker app.
 
+**[WORKFLOW.md](./WORKFLOW.md)** — Development process and conventions
+
+---
+
 ## Naming Convention
 
 ```
