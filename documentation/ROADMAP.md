@@ -27,8 +27,8 @@ A mobile-friendly grocery list that:
 | ID | Feature | Status | Description |
 |----|---------|--------|-------------|
 | 001 | DynamoDB Migration | ✅ Done | Replace JSON file with AWS DynamoDB |
-| 002 | User Authentication | ⬜ Next | Login/signup with AWS Cognito |
-| 003 | List Sharing | ⬜ Planned | Invite family members to shared lists |
+| 002 | User Authentication | ✅ Done | Login/signup with AWS Cognito |
+| 003 | List Sharing | ⬜ Next | Invite family members to shared lists |
 
 ### Feature 001: DynamoDB Migration ✅
 - **Completed:** 2026-02-02
@@ -36,22 +36,22 @@ A mobile-friendly grocery list that:
 - **Why:** JSON can't support multiple users or sync across devices
 - **Docs:** [001-dynamodb-migration/CHANGES.md](./001-dynamodb-migration/CHANGES.md)
 
-### Feature 002: User Authentication (Next)
-- **Status:** Not started
-- **What:** Add login/signup functionality
+### Feature 002: User Authentication ✅
+- **Completed:** 2026-02-02
+- **What:** Login/signup with AWS Cognito + Google OAuth
 - **Why:** Need to know who users are before sharing lists
-- **Approach:** AWS Cognito (aligns with AWS cert goals)
-- **Key tasks:**
-  - Set up Cognito User Pool
-  - Create login/signup UI
-  - Protect API routes with authentication
-  - Replace `DEFAULT_USER_ID` with actual user IDs
+- **Docs:** [002-user-authentication/CHANGES.md](./002-user-authentication/CHANGES.md)
+- **Key achievements:**
+  - AWS Cognito User Pool with Google federated identity
+  - Email/password registration with verification
+  - JWT-protected API routes
+  - User ID from token replaces hardcoded `DEFAULT_USER_ID`
 
-### Feature 003: List Sharing
-- **Status:** Not started
+### Feature 003: List Sharing (Next)
+- **Status:** Ready to start
 - **What:** Allow users to share lists with family members
 - **Why:** Core feature - family members shopping together
-- **Depends on:** Feature 002 (Authentication)
+- **Depends on:** Feature 002 (Authentication) ✅
 - **Key tasks:**
   - Design sharing data model (who has access to which lists)
   - Create invite/accept flow
@@ -143,8 +143,8 @@ Decisions made that affect future development:
 |----------|--------|-----|------|
 | Database | AWS DynamoDB | NoSQL for flexibility, AWS for cert prep, free tier | 2026-02-02 |
 | Framework | Next.js | React-based, API routes built-in, good DX | Initial |
-| Auth (planned) | AWS Cognito | Native AWS integration, cert relevance | TBD |
-| Hosting (planned) | Vercel or AWS Amplify | TBD based on auth choice | TBD |
+| Auth | AWS Cognito + Google OAuth | Native AWS integration, cert relevance, user convenience | 2026-02-02 |
+| Hosting (planned) | Vercel or AWS Amplify | TBD based on deployment needs | TBD |
 
 ---
 
@@ -154,7 +154,7 @@ Decisions made that affect future development:
 Frontend:        Next.js 16 + React 19
 Language:        TypeScript 5
 Database:        AWS DynamoDB
-Auth:            Not yet implemented (planned: AWS Cognito)
+Auth:            AWS Cognito + Google OAuth (aws-amplify)
 Hosting:         Local development only
 Styling:         CSS with custom properties (dark theme)
 ```
@@ -167,7 +167,7 @@ Styling:         CSS with custom properties (dark theme)
 |---------|--------|---------|
 | DynamoDB | ✅ Active | Primary database |
 | IAM | ✅ Active | API credentials |
-| Cognito | ⬜ Planned | User authentication |
+| Cognito | ✅ Active | User authentication + Google OAuth |
 | AppSync | ⬜ Considered | Real-time sync |
 | Textract | ⬜ Future | Receipt OCR |
 | S3 | ⬜ Future | Image storage |
@@ -188,3 +188,4 @@ Styling:         CSS with custom properties (dark theme)
 | Date | Change |
 |------|--------|
 | 2026-02-02 | Initial roadmap created after Feature 001 completion |
+| 2026-02-02 | Updated after Feature 002 (User Authentication) completion |
