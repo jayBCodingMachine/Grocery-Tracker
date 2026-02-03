@@ -1,37 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GroceryItemType } from '../app/types';
 import GroceryItem from './GroceryItem';
 import AddItem from './AddItem';
+import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface GroceryListProps {
     initialItems?: GroceryItemType[];
 }
 
 export default function GroceryList({ initialItems = [] }: GroceryListProps) {
+    const { getAccessToken } = useAuth();
     const [items, setItems] = useState<GroceryItemType[]>(initialItems);
     const [filterStore, setFilterStore] = useState('All');
     const [loading, setLoading] = useState(true);
 
-    // Fetch items on mount
-    useEffect(() => {
-        fetchItems();
-    }, []);
+    const getAuthHeaders = useCallback(async (): Promise<HeadersInit> => {
+        const token = await getAccessToken();
+        return {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        };
+    }, [getAccessToken]);
 
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         try {
-            const res = await fetch('/api/items');
+            const headers = await getAuthHeaders();
+            const res = await fetch('/api/items', { headers });
             if (res.ok) {
                 const data = await res.json();
                 setItems(data);
+            } else if (res.status === 401) {
+                toast.error('Session expired. Please sign in again.');
             }
         } catch (err) {
             console.error('Failed to fetch items', err);
+            toast.error('Failed to load items');
         } finally {
             setLoading(false);
         }
-    };
+    }, [getAuthHeaders]);
+
+    // Fetch items on mount
+    useEffect(() => {
+        fetchItems();
+    }, [fetchItems]);
 
     // Derive unique stores from items + defaults
     const stores = ['All', ...Array.from(new Set(items.map(i => i.store).filter(Boolean)))];
@@ -48,18 +63,21 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
 
     const addItem = async (name: string, store: string) => {
         try {
-            // Optimistic add could be done here if we generate a temp ID
+            const headers = await getAuthHeaders();
             const res = await fetch('/api/items', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({ action: 'add', name, store })
             });
             if (res.ok) {
                 const newItem = await res.json();
                 setItems(prev => [newItem, ...prev]);
+            } else if (res.status === 401) {
+                toast.error('Session expired. Please sign in again.');
             }
         } catch (error) {
             console.error('Error adding item', error);
+            toast.error('Failed to add item');
         }
     };
 
@@ -73,9 +91,10 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         ));
 
         try {
+            const headers = await getAuthHeaders();
             await fetch('/api/items', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({ itemId, updates: { completed: !item.completed } })
             });
         } catch (error) {
@@ -90,8 +109,10 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         setItems(prev => prev.filter(item => item.itemId !== itemId));
 
         try {
+            const headers = await getAuthHeaders();
             await fetch(`/api/items?id=${itemId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers,
             });
         } catch (error) {
             console.error('Error deleting item', error);

@@ -7,18 +7,39 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from '@/lib/dynamodb';
 import { GroceryItemType } from '@/app/types';
+import { verifyToken, extractToken } from '@/lib/auth-server';
 
-// Temporary: hardcoded user until we add authentication
-const DEFAULT_USER_ID = 'default_user';
+// Helper to get authenticated userId or return 401
+async function getAuthenticatedUserId(request: Request): Promise<string | NextResponse> {
+    const token = extractToken(request);
+
+    if (!token) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const verified = await verifyToken(token);
+
+    if (!verified) {
+        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    return verified.userId;
+}
 
 // GET - Fetch all items for the current user
-export async function GET() {
+export async function GET(request: Request) {
+    const userIdOrError = await getAuthenticatedUserId(request);
+    if (userIdOrError instanceof NextResponse) {
+        return userIdOrError;
+    }
+    const userId = userIdOrError;
+
     try {
         const command = new QueryCommand({
             TableName: TABLE_NAME,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
-                ':userId': DEFAULT_USER_ID,
+                ':userId': userId,
             },
         });
 
@@ -34,12 +55,18 @@ export async function GET() {
 
 // POST - Add a new item
 export async function POST(request: Request) {
+    const userIdOrError = await getAuthenticatedUserId(request);
+    if (userIdOrError instanceof NextResponse) {
+        return userIdOrError;
+    }
+    const userId = userIdOrError;
+
     try {
         const body = await request.json();
 
         if (body.action === 'add') {
             const newItem: GroceryItemType = {
-                userId: DEFAULT_USER_ID,
+                userId: userId,
                 itemId: `item_${Date.now()}`,
                 name: body.name,
                 store: body.store,
@@ -64,6 +91,12 @@ export async function POST(request: Request) {
 
 // PUT - Update an item (e.g., toggle completed)
 export async function PUT(request: Request) {
+    const userIdOrError = await getAuthenticatedUserId(request);
+    if (userIdOrError instanceof NextResponse) {
+        return userIdOrError;
+    }
+    const userId = userIdOrError;
+
     try {
         const body = await request.json();
         const { itemId, updates } = body;
@@ -82,7 +115,7 @@ export async function PUT(request: Request) {
         const command = new UpdateCommand({
             TableName: TABLE_NAME,
             Key: {
-                userId: DEFAULT_USER_ID,
+                userId: userId,
                 itemId: itemId,
             },
             UpdateExpression: `SET ${updateExpressions.join(', ')}`,
@@ -101,6 +134,12 @@ export async function PUT(request: Request) {
 
 // DELETE - Remove an item
 export async function DELETE(request: Request) {
+    const userIdOrError = await getAuthenticatedUserId(request);
+    if (userIdOrError instanceof NextResponse) {
+        return userIdOrError;
+    }
+    const userId = userIdOrError;
+
     try {
         const { searchParams } = new URL(request.url);
         const itemId = searchParams.get('id');
@@ -112,7 +151,7 @@ export async function DELETE(request: Request) {
         const command = new DeleteCommand({
             TableName: TABLE_NAME,
             Key: {
-                userId: DEFAULT_USER_ID,
+                userId: userId,
                 itemId: itemId,
             },
         });
