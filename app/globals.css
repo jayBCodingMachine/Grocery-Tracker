@@ -139,3 +139,329 @@ p {
   padding: 0;
   border-radius: var(--radius-full);
 }
+
+/* ============================================
+   Filter Bar Styles
+   ============================================ */
+
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+}
+
+.filter-chips-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.filter-chips {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.filter-chip--selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.filter-chip--selected:hover {
+  background: var(--primary-hover);
+}
+
+.filter-chip--more {
+  background: var(--surface-highlight);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.filter-chip__emoji {
+  font-size: 1rem;
+}
+
+.filter-chip__name {
+  font-weight: 500;
+}
+
+.filter-chip__count {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.filter-chip__remove {
+  margin-left: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.filter-chip__remove:hover {
+  opacity: 1;
+}
+
+.filter-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  text-decoration: underline;
+}
+
+.filter-clear:hover {
+  color: var(--text-secondary);
+}
+
+.filter-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-toggle:hover {
+  border-color: var(--primary);
+}
+
+.filter-toggle--active {
+  background: var(--surface-highlight);
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.filter-toggle__label {
+  font-weight: 500;
+}
+
+/* ============================================
+   Store Group Styles
+   ============================================ */
+
+.store-group {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.store-group__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.store-group__header:hover {
+  background: var(--surface-highlight);
+}
+
+.store-group__emoji {
+  font-size: 1.25rem;
+}
+
+.store-group__name {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.store-group__count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.store-group__chevron {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.store-group__chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.store-group__items {
+  padding: 0 var(--spacing-sm) var(--spacing-sm);
+}
+
+/* ============================================
+   Store Dropdown Styles
+   ============================================ */
+
+.store-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.store-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.store-dropdown__trigger:hover {
+  border-color: var(--primary);
+}
+
+.store-dropdown__emoji {
+  font-size: 1rem;
+}
+
+.store-dropdown__value {
+  font-weight: 500;
+}
+
+.store-dropdown__arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.store-dropdown__menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.store-dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.store-dropdown__option:hover {
+  background: var(--surface-highlight);
+  color: var(--text-primary);
+}
+
+.store-dropdown__option--selected {
+  background: var(--surface-highlight);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.store-dropdown__option--add {
+  color: var(--primary);
+}
+
+.store-dropdown__divider {
+  height: 1px;
+  background: var(--divider);
+  margin: 4px 0;
+}
+
+.store-dropdown__add-new {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+
+.store-dropdown__input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.store-dropdown__input:focus {
+  border-color: var(--primary);
+}
+
+.store-dropdown__add-btn {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.store-dropdown__add-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.store-dropdown__add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

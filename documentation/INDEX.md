@@ -30,13 +30,14 @@ XXX-feature-name/
 |----|---------|------|--------|
 | [001](./001-dynamodb-migration/CHANGES.md) | DynamoDB Migration | 2026-02-02 | Completed |
 | [002](./002-user-authentication/CHANGES.md) | User Authentication | 2026-02-02 | Completed |
+| [003](./003-enhanced-filtering/CHANGES.md) | Enhanced Store Filtering | 2026-02-03 | Completed |
 
 ## Upcoming Features
 
 | ID | Feature | Status |
 |----|---------|--------|
-| 003 | List Sharing | Planned |
-| 004 | Real-time Sync | Planned |
+| 004 | List Sharing | Planned |
+| 005 | Real-time Sync | Planned |
 
 ---
 

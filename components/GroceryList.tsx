@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GroceryItemType } from '../app/types';
 import GroceryItem from './GroceryItem';
 import AddItem from './AddItem';
+import FilterBar from './FilterBar';
+import StoreGroup from './StoreGroup';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -11,11 +13,56 @@ interface GroceryListProps {
     initialItems?: GroceryItemType[];
 }
 
+// localStorage helpers with SSR safety
+function getStorageItem<T>(key: string, defaultValue: T): T {
+    if (typeof window === 'undefined') return defaultValue;
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultValue;
+    } catch {
+        return defaultValue;
+    }
+}
+
+function setStorageItem(key: string, value: unknown): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        // Ignore storage errors
+    }
+}
+
 export default function GroceryList({ initialItems = [] }: GroceryListProps) {
     const { getAccessToken } = useAuth();
     const [items, setItems] = useState<GroceryItemType[]>(initialItems);
-    const [filterStore, setFilterStore] = useState('All');
     const [loading, setLoading] = useState(true);
+
+    // Filter and view state with persistence
+    const [selectedStores, setSelectedStores] = useState<string[]>([]);
+    const [groupByStore, setGroupByStore] = useState(false);
+    const [hideCompleted, setHideCompleted] = useState(false);
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+    // Load persisted state on mount
+    useEffect(() => {
+        setSelectedStores(getStorageItem('grocery-filters', []));
+        setGroupByStore(getStorageItem('grocery-group', false));
+        setHideCompleted(getStorageItem('grocery-hide-completed', false));
+    }, []);
+
+    // Persist state changes
+    useEffect(() => {
+        setStorageItem('grocery-filters', selectedStores);
+    }, [selectedStores]);
+
+    useEffect(() => {
+        setStorageItem('grocery-group', groupByStore);
+    }, [groupByStore]);
+
+    useEffect(() => {
+        setStorageItem('grocery-hide-completed', hideCompleted);
+    }, [hideCompleted]);
 
     const getAuthHeaders = useCallback(async (): Promise<HeadersInit> => {
         const token = await getAccessToken();
@@ -48,19 +95,95 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         fetchItems();
     }, [fetchItems]);
 
-    // Derive unique stores from items + defaults
-    const stores = ['All', ...Array.from(new Set(items.map(i => i.store).filter(Boolean)))];
+    // Derive unique stores from items
+    const stores = useMemo(() => {
+        return Array.from(new Set(items.map(i => i.store).filter(Boolean))).sort();
+    }, [items]);
 
-    const filteredItems = filterStore === 'All'
-        ? items
-        : items.filter(i => i.store === filterStore);
+    // Calculate store counts
+    const storeCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        items.forEach(item => {
+            if (item.store) {
+                counts[item.store] = (counts[item.store] || 0) + 1;
+            }
+        });
+        return counts;
+    }, [items]);
 
-    // Sort: Incomplete first, then by name
-    filteredItems.sort((a, b) => {
-        if (a.completed === b.completed) return 0;
-        return a.completed ? 1 : -1;
-    });
+    // Filter items
+    const filteredItems = useMemo(() => {
+        let result = items;
 
+        // Filter by selected stores
+        if (selectedStores.length > 0) {
+            result = result.filter(i => selectedStores.includes(i.store || ''));
+        }
+
+        // Hide completed if enabled
+        if (hideCompleted) {
+            result = result.filter(i => !i.completed);
+        }
+
+        // Sort: Incomplete first
+        return [...result].sort((a, b) => {
+            if (a.completed === b.completed) return 0;
+            return a.completed ? 1 : -1;
+        });
+    }, [items, selectedStores, hideCompleted]);
+
+    // Group items by store
+    const groupedItems = useMemo(() => {
+        const groups: Record<string, GroceryItemType[]> = {};
+        filteredItems.forEach(item => {
+            const store = item.store || 'No Store';
+            if (!groups[store]) groups[store] = [];
+            groups[store].push(item);
+        });
+        return groups;
+    }, [filteredItems]);
+
+    // Smart expand: auto-expand filtered stores when filters change
+    useEffect(() => {
+        if (selectedStores.length > 0) {
+            setExpandedGroups(new Set(selectedStores));
+        }
+    }, [selectedStores]);
+
+    // Filter handlers
+    const handleToggleStore = (store: string) => {
+        setSelectedStores(prev =>
+            prev.includes(store)
+                ? prev.filter(s => s !== store)
+                : [...prev, store]
+        );
+    };
+
+    const handleClearFilters = () => {
+        setSelectedStores([]);
+    };
+
+    const handleToggleGrouping = () => {
+        setGroupByStore(prev => !prev);
+    };
+
+    const handleToggleHideCompleted = () => {
+        setHideCompleted(prev => !prev);
+    };
+
+    const handleToggleGroup = (store: string) => {
+        setExpandedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(store)) {
+                next.delete(store);
+            } else {
+                next.add(store);
+            }
+            return next;
+        });
+    };
+
+    // Item CRUD handlers
     const addItem = async (name: string, store: string) => {
         try {
             const headers = await getAuthHeaders();
@@ -98,7 +221,6 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
                 body: JSON.stringify({ itemId, updates: { completed: !item.completed } })
             });
         } catch (error) {
-            // Revert on error
             console.error('Error updating item', error);
             fetchItems();
         }
@@ -120,56 +242,79 @@ export default function GroceryList({ initialItems = [] }: GroceryListProps) {
         }
     };
 
+    // Render empty state
+    const renderEmptyState = () => (
+        <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            <p>
+                {loading
+                    ? 'Loading...'
+                    : selectedStores.length > 0
+                        ? 'No items match your filters'
+                        : 'No items yet. Add your first item above!'}
+            </p>
+        </div>
+    );
+
+    // Render flat list
+    const renderFlatList = () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {filteredItems.map(item => (
+                <GroceryItem
+                    key={item.itemId}
+                    item={item}
+                    onToggle={toggleItem}
+                    onDelete={deleteItem}
+                />
+            ))}
+        </div>
+    );
+
+    // Render grouped list
+    const renderGroupedList = () => {
+        const storeNames = Object.keys(groupedItems).sort();
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {storeNames.map(store => (
+                    <StoreGroup
+                        key={store}
+                        store={store}
+                        items={groupedItems[store]}
+                        isExpanded={expandedGroups.has(store)}
+                        onToggle={() => handleToggleGroup(store)}
+                        onItemToggle={toggleItem}
+                        onItemDelete={deleteItem}
+                    />
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div style={{ maxWidth: '100%', width: '100%' }}>
-            <AddItem onAdd={addItem} />
+            <AddItem onAdd={addItem} existingStores={stores} />
 
-            {/* Filter Tabs */}
-            {stores.length > 2 && (
-                <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    marginBottom: '16px',
-                    overflowX: 'auto',
-                    paddingBottom: '4px'
-                }}>
-                    {stores.map(store => (
-                        <button
-                            key={store}
-                            onClick={() => setFilterStore(store)}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                padding: '6px 12px',
-                                color: filterStore === store ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                fontWeight: filterStore === store ? 700 : 400,
-                                borderBottom: filterStore === store ? '2px solid var(--primary)' : '2px solid transparent',
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap'
-                            }}
-                        >
-                            {store}
-                        </button>
-                    ))}
-                </div>
+            {/* Filter Bar */}
+            {stores.length > 0 && (
+                <FilterBar
+                    stores={stores}
+                    storeCounts={storeCounts}
+                    selectedStores={selectedStores}
+                    onToggleStore={handleToggleStore}
+                    onClearFilters={handleClearFilters}
+                    groupByStore={groupByStore}
+                    onToggleGrouping={handleToggleGrouping}
+                    hideCompleted={hideCompleted}
+                    onToggleHideCompleted={handleToggleHideCompleted}
+                />
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {filteredItems.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                        <p>{loading ? 'Loading...' : 'No items found'}</p>
-                    </div>
-                ) : (
-                    filteredItems.map(item => (
-                        <GroceryItem
-                            key={item.itemId}
-                            item={item}
-                            onToggle={toggleItem}
-                            onDelete={deleteItem}
-                        />
-                    ))
-                )}
-            </div>
+            {/* Item List */}
+            {filteredItems.length === 0
+                ? renderEmptyState()
+                : groupByStore
+                    ? renderGroupedList()
+                    : renderFlatList()
+            }
         </div>
     );
 }
