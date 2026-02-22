@@ -36,8 +36,8 @@ XXX-feature-name/
 
 | ID | Feature | Status |
 |----|---------|--------|
-| 004 | List Sharing | Planned |
-| 005 | Real-time Sync | Planned |
+| XXX | List Sharing | Planned |
+| XXX | Real-time Sync | Planned |
 
 ---
 

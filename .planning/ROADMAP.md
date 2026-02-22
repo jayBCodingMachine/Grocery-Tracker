@@ -28,7 +28,8 @@ A mobile-friendly grocery list that:
 |----|---------|--------|-------------|
 | 001 | DynamoDB Migration | ✅ Done | Replace JSON file with AWS DynamoDB |
 | 002 | User Authentication | ✅ Done | Login/signup with AWS Cognito |
-| 003 | List Sharing | ⬜ Next | Invite family members to shared lists |
+| 003 | Enhanced Store Filtering | ✅ Done | Multi-select filters, grouped views, preferences |
+| 004 | List Sharing | ⬜ Next | Invite family members to shared lists |
 
 ### Feature 001: DynamoDB Migration ✅
 - **Completed:** 2026-02-02
@@ -47,7 +48,18 @@ A mobile-friendly grocery list that:
   - JWT-protected API routes
   - User ID from token replaces hardcoded `DEFAULT_USER_ID`
 
-### Feature 003: List Sharing (Next)
+### Feature 003: Enhanced Store Filtering ✅
+- **Completed:** 2026-02-03
+- **What:** Multi-select store filters, collapsible grouped views, persistent preferences
+- **Why:** Better UX for managing items across multiple stores
+- **Docs:** [003-enhanced-filtering/CHANGES.md](./003-enhanced-filtering/CHANGES.md)
+- **Key achievements:**
+  - Multi-select filter chips with emoji icons and item counts
+  - Collapsible store groups with smooth animations
+  - Store dropdown with custom store support
+  - All preferences persist to localStorage
+
+### Feature 004: List Sharing (Next)
 - **Status:** Ready to start
 - **What:** Allow users to share lists with family members
 - **Why:** Core feature - family members shopping together
@@ -65,11 +77,11 @@ A mobile-friendly grocery list that:
 
 | ID | Feature | Status | Description |
 |----|---------|--------|-------------|
-| 004 | Real-time Sync | ⬜ Planned | See updates instantly when others change the list |
-| 005 | Multiple Lists | ⬜ Planned | Separate lists for different purposes |
-| 006 | Mobile PWA | ⬜ Planned | Install as app on phone, offline support |
+| 005 | Real-time Sync | ⬜ Planned | See updates instantly when others change the list |
+| 006 | Multiple Lists | ⬜ Planned | Separate lists for different purposes |
+| 007 | Mobile PWA | ⬜ Planned | Install as app on phone, offline support |
 
-### Feature 004: Real-time Sync
+### Feature 005: Real-time Sync
 - **What:** When one person checks off an item, others see it immediately
 - **Why:** Avoids "I already got that!" moments at the store
 - **Approach options:**
@@ -77,7 +89,7 @@ A mobile-friendly grocery list that:
   - DynamoDB Streams + WebSockets
   - Polling (simple but less elegant)
 
-### Feature 005: Multiple Lists
+### Feature 006: Multiple Lists
 - **What:** Create separate lists (e.g., "Weekly Groceries", "Costco Run", "Party Supplies")
 - **Why:** Different shopping trips have different needs
 - **Key tasks:**
@@ -85,7 +97,7 @@ A mobile-friendly grocery list that:
   - Create list management UI
   - Update sharing to be per-list
 
-### Feature 006: Mobile PWA
+### Feature 007: Mobile PWA
 - **What:** Progressive Web App that can be installed on phones
 - **Why:** Quick access from home screen, works offline
 - **Key tasks:**
@@ -101,26 +113,26 @@ A mobile-friendly grocery list that:
 
 | ID | Feature | Status | Description |
 |----|---------|--------|-------------|
-| 007 | Barcode Scanning | ⬜ Future | Scan product to add to list |
-| 008 | Receipt Import | ⬜ Future | OCR receipts to track purchases |
-| 009 | Price Tracking | ⬜ Future | Historical prices, find best deals |
-| 010 | Smart Suggestions | ⬜ Future | "You usually buy milk on Fridays" |
+| 008 | Barcode Scanning | ⬜ Future | Scan product to add to list |
+| 009 | Receipt Import | ⬜ Future | OCR receipts to track purchases |
+| 010 | Price Tracking | ⬜ Future | Historical prices, find best deals |
+| 011 | Smart Suggestions | ⬜ Future | "You usually buy milk on Fridays" |
 
-### Feature 007: Barcode Scanning
+### Feature 008: Barcode Scanning
 - **What:** Use phone camera to scan product barcodes
 - **Why:** Faster than typing, especially for restocking
 - **Approach:**
   - Browser-based scanner (quagga.js or similar)
   - Product database API (Open Food Facts, UPC Database)
 
-### Feature 008: Receipt Import
+### Feature 009: Receipt Import
 - **What:** Take photo of receipt, auto-import items
 - **Why:** Track what you actually bought, not just what you planned
 - **Approach:**
   - AWS Textract for OCR
   - Parse receipt format to extract items/prices
 
-### Feature 009: Price Tracking
+### Feature 010: Price Tracking
 - **What:** Store historical prices, show trends
 - **Why:** Know if a "sale" is actually a good deal
 - **Key tasks:**
@@ -128,7 +140,7 @@ A mobile-friendly grocery list that:
   - Store purchase history
   - Create price comparison views
 
-### Feature 010: Smart Suggestions
+### Feature 011: Smart Suggestions
 - **What:** AI-powered suggestions based on patterns
 - **Why:** "You're out of milk" before you realize it
 - **Approach:** Analyze purchase frequency, suggest items
@@ -189,3 +201,4 @@ Styling:         CSS with custom properties (dark theme)
 |------|--------|
 | 2026-02-02 | Initial roadmap created after Feature 001 completion |
 | 2026-02-02 | Updated after Feature 002 (User Authentication) completion |
+| 2026-02-03 | Updated after Feature 003 (Enhanced Store Filtering) completion |
